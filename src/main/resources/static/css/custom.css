@@ -1,0 +1,39 @@
+/* Saját kiegészítések az Editorial témához */
+
+/* Lábléc a fő tartalom alján, minden oldalon */
+.page-footer {
+	border-top: solid 2px rgba(210, 215, 217, 0.75);
+	margin-top: 3em;
+	padding-top: 1.5em;
+	text-align: center;
+	color: #9fa3a6;
+	font-size: 0.9em;
+}
+
+.page-footer p {
+	margin: 0;
+}
+
+/* Ikonok a menükártyák címében */
+.posts article h3 .icon {
+	color: #f56a6a;
+	margin-right: 0.35em;
+}
+
+/* A banner illusztráció mindig teljes egészében látszódjon */
+#banner .image.object {
+	background: #2b3034;
+	border-radius: 0.375em;
+	overflow: hidden;
+}
+
+#banner .image.object img {
+	object-fit: contain;
+}
+
+/* Fekvő nézetben a hosszú címsor miatt keskenyebb kép, hogy ne lógjon ki */
+@media screen and (orientation: landscape) {
+	#banner .image.object {
+		width: 42%;
+	}
+}

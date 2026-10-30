@@ -1,0 +1,78 @@
+<!DOCTYPE HTML>
+<!--
+	Közös oldalelemek az Editorial (HTML5 UP) témához.
+	Téma: html5up.net/editorial – CCA 3.0 licenc
+-->
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+
+<head th:fragment="head(title)">
+	<title th:text="${title} + ' | Java beadandó'">Java beadandó</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+	<link rel="stylesheet" th:href="@{/assets/css/main.css}" />
+	<link rel="stylesheet" th:href="@{/css/custom.css}" />
+</head>
+
+<body>
+
+	<!-- Fejléc -->
+	<header id="header" th:fragment="pageHeader">
+		<a th:href="@{/}" class="logo"><strong>Java beadandó</strong> – MNB &amp; Forex kliens</a>
+		<ul class="icons">
+			<li><a href="https://github.com/Levminer/java-eloadas-beadando" class="icon brands fa-github" target="_blank"><span class="label">GitHub</span></a></li>
+		</ul>
+	</header>
+
+	<!-- Lábléc: készítők neve és Neptun kódja (minden oldal alján) -->
+	<footer class="page-footer" th:fragment="pageFooter">
+		<p>
+			Készítette:
+			<strong>Fődi Kinga</strong> (EW67RO)
+			-
+			<strong>Lőrik Levente</strong> (AICYHB)
+		</p>
+	</footer>
+
+	<!-- Oldalsáv menüvel -->
+	<div id="sidebar" th:fragment="sidebar">
+		<div class="inner">
+
+			<nav id="menu">
+				<header class="major">
+					<h2>Menü</h2>
+				</header>
+				<ul>
+					<li><a th:href="@{/}">Főoldal</a></li>
+					<li><a th:href="@{/soap}">SOAP – MNB árfolyamok</a></li>
+					<li>
+						<span class="opener active">Forex</span>
+						<ul>
+							<li><a th:href="@{/forex/account}">Forex-account</a></li>
+							<li><a th:href="@{/forex/aktar}">Forex-AktÁr</a></li>
+							<li><a th:href="@{/forex/histar}">Forex-HistÁr</a></li>
+							<li><a th:href="@{/forex/nyit}">Forex-Nyit</a></li>
+							<li><a th:href="@{/forex/poz}">Forex-Poz</a></li>
+							<li><a th:href="@{/forex/zar}">Forex-Zár</a></li>
+						</ul>
+					</li>
+				</ul>
+			</nav>
+
+			<footer id="footer">
+				<p class="copyright">Design: <a href="https://html5up.net/editorial" target="_blank">Editorial by HTML5 UP</a>.</p>
+			</footer>
+
+		</div>
+	</div>
+
+	<!-- Szkriptek -->
+	<th:block th:fragment="scripts">
+		<script th:src="@{/assets/js/jquery.min.js}"></script>
+		<script th:src="@{/assets/js/browser.min.js}"></script>
+		<script th:src="@{/assets/js/breakpoints.min.js}"></script>
+		<script th:src="@{/assets/js/util.js}"></script>
+		<script th:src="@{/assets/js/main.js}"></script>
+	</th:block>
+
+</body>
+</html>

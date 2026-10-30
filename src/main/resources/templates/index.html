@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Főoldal')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<!-- Banner -->
+				<section id="banner">
+					<div class="content">
+						<header>
+							<h1>Árfolyamok és devizakereskedés <br />egy helyen</h1>
+							<p>Böngésző alapú asztali alkalmazás Java Spring Boot keretrendszerrel</p>
+						</header>
+						<p>
+							Az alkalmazás a Magyar Nemzeti Bank SOAP webszolgáltatásából kérdezi le a hivatalos
+							devizaárfolyamokat és grafikonon ábrázolja őket, valamint az Oanda API segítségével
+							egy teljes Forex kereskedő klienst valósít meg: számlainformációk, aktuális és historikus
+							árak, pozíciók nyitása, listázása és zárása.
+						</p>
+						<ul class="actions">
+							<li><a th:href="@{/soap}" class="button big primary">MNB árfolyamok</a></li>
+							<li><a th:href="@{/forex/account}" class="button big">Forex kliens</a></li>
+						</ul>
+					</div>
+					<span class="image object">
+						<img th:src="@{/images/banner.svg}" alt="Árfolyam grafikon illusztráció" />
+					</span>
+				</section>
+
+				<!-- Funkciók -->
+				<section>
+					<header class="major">
+						<h2>Mit tud az alkalmazás?</h2>
+					</header>
+					<div class="features">
+						<article>
+							<span class="icon solid fa-university"></span>
+							<div class="content">
+								<h3>MNB SOAP kliens</h3>
+								<p>Devizaárfolyamok lekérdezése tetszőleges időszakra a Magyar Nemzeti Bank webszolgáltatásából.</p>
+							</div>
+						</article>
+						<article>
+							<span class="icon solid fa-chart-line"></span>
+							<div class="content">
+								<h3>Grafikonok</h3>
+								<p>A lekérdezett árfolyamok táblázatban és Chart.js grafikonon is megjelennek.</p>
+							</div>
+						</article>
+						<article>
+							<span class="icon solid fa-exchange-alt"></span>
+							<div class="content">
+								<h3>Forex kereskedés</h3>
+								<p>Oanda demo számla kezelése: aktuális és historikus árak, pozíciók nyitása és zárása piaci áron.</p>
+							</div>
+						</article>
+						<article>
+							<span class="icon brands fa-java"></span>
+							<div class="content">
+								<h3>Java 25 + Spring Boot</h3>
+								<p>Egyetlen futtatható JAR fájl: <code>java -jar beadando.jar</code>, majd böngészőben <code>localhost:8080</code>.</p>
+							</div>
+						</article>
+					</div>
+				</section>
+
+				<!-- Menük -->
+				<section>
+					<header class="major">
+						<h2>Menüpontok</h2>
+					</header>
+					<div class="posts">
+						<article>
+							<h3><span class="icon solid fa-coins"></span> SOAP – MNB</h3>
+							<p>Deviza és időszak kiválasztása, az árfolyamok kiírása és grafikonon való ábrázolása.</p>
+							<ul class="actions">
+								<li><a th:href="@{/soap}" class="button">Megnyitás</a></li>
+							</ul>
+						</article>
+						<article>
+							<h3><span class="icon solid fa-wallet"></span> Forex-account</h3>
+							<p>Az Oanda számla adatai: egyenleg, devizanem, nyitott pozíciók száma, árrés.</p>
+							<ul class="actions">
+								<li><a th:href="@{/forex/account}" class="button">Megnyitás</a></li>
+							</ul>
+						</article>
+						<article>
+							<h3><span class="icon solid fa-tag"></span> Forex-AktÁr</h3>
+							<p>Egy kiválasztott instrumentum (pl. EUR_USD) aktuális vételi és eladási ára.</p>
+							<ul class="actions">
+								<li><a th:href="@{/forex/aktar}" class="button">Megnyitás</a></li>
+							</ul>
+						</article>
+						<article>
+							<h3><span class="icon solid fa-history"></span> Forex-HistÁr</h3>
+							<p>Az utolsó 10 historikus ár a kiválasztott instrumentumra és időfelbontásra.</p>
+							<ul class="actions">
+								<li><a th:href="@{/forex/histar}" class="button">Megnyitás</a></li>
+							</ul>
+						</article>
+						<article>
+							<h3><span class="icon solid fa-door-open"></span> Forex-Nyit</h3>
+							<p>Pozíció nyitása piaci áron – pozitív mennyiség: Long, negatív: Short.</p>
+							<ul class="actions">
+								<li><a th:href="@{/forex/nyit}" class="button">Megnyitás</a></li>
+							</ul>
+						</article>
+						<article>
+							<h3><span class="icon solid fa-list"></span> Forex-Poz / Forex-Zár</h3>
+							<p>A nyitott pozíciók táblázata, valamint pozíció zárása tradeId alapján.</p>
+							<ul class="actions">
+								<li><a th:href="@{/forex/poz}" class="button">Pozíciók</a></li>
+								<li><a th:href="@{/forex/zar}" class="button">Zárás</a></li>
+							</ul>
+						</article>
+					</div>
+				</section>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

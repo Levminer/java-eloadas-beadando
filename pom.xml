@@ -15,6 +15,7 @@
 	<description>Java alkalmazasok beadando</description>
 	<properties>
 		<java.version>25</java.version>
+		<jaxws.version>4.0.5</jaxws.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -24,6 +25,12 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc</artifactId>
+		</dependency>
+		<!-- SOAP kliens futtatókörnyezet (MNB webszolgáltatás) -->
+		<dependency>
+			<groupId>com.sun.xml.ws</groupId>
+			<artifactId>jaxws-rt</artifactId>
+			<version>${jaxws.version}</version>
 		</dependency>
 
 		<dependency>
@@ -50,6 +57,28 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<!-- SOAP kliens osztályok generálása az MNB WSDL-ből (src/main/wsdl) -->
+			<plugin>
+				<groupId>com.sun.xml.ws</groupId>
+				<artifactId>jaxws-maven-plugin</artifactId>
+				<version>${jaxws.version}</version>
+				<executions>
+					<execution>
+						<id>mnb-arfolyamok</id>
+						<goals>
+							<goal>wsimport</goal>
+						</goals>
+						<configuration>
+							<wsdlDirectory>${project.basedir}/src/main/wsdl</wsdlDirectory>
+							<wsdlFiles>
+								<wsdlFile>arfolyamok.wsdl</wsdlFile>
+							</wsdlFiles>
+							<wsdlLocation>http://www.mnb.hu/arfolyamok.asmx?wsdl</wsdlLocation>
+							<packageName>hu.beadando.soap.mnb</packageName>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>

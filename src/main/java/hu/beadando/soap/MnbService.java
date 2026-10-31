@@ -30,6 +30,9 @@ public class MnbService {
 
 	private MNBArfolyamServiceSoap port;
 
+	/** A devizák listája ritkán változik, ezért elég egyszer lekérdezni. */
+	private List<String> currencies;
+
 	/** A SOAP port létrehozása csak az első híváskor, mert ehhez letölti a WSDL-t. */
 	private synchronized MNBArfolyamServiceSoap getPort() {
 		if (port == null) {
@@ -42,17 +45,21 @@ public class MnbService {
 	 * Az MNB által jegyzett devizák listája (a HUF nélkül).
 	 * Válasz formátuma: {@code <MNBCurrencies><Currencies><Curr>EUR</Curr>...}
 	 */
-	public List<String> getCurrencies() {
+	public synchronized List<String> getCurrencies() {
+		if (currencies != null) {
+			return currencies;
+		}
 		try {
 			Document doc = parseXml(getPort().getCurrencies());
 			NodeList nodes = doc.getElementsByTagName("Curr");
-			List<String> currencies = new ArrayList<>();
+			List<String> result = new ArrayList<>();
 			for (int i = 0; i < nodes.getLength(); i++) {
 				String curr = nodes.item(i).getTextContent().trim();
 				if (!curr.equals("HUF")) {
-					currencies.add(curr);
+					result.add(curr);
 				}
 			}
+			currencies = List.copyOf(result);
 			return currencies;
 		} catch (Exception e) {
 			throw new MnbException("Nem sikerült lekérdezni a devizák listáját az MNB-től.", e);

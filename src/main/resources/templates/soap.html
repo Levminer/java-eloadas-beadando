@@ -1,0 +1,179 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('SOAP – MNB árfolyamok')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section>
+					<header class="main">
+						<h1>MNB árfolyamok</h1>
+					</header>
+					<p>
+						A Magyar Nemzeti Bank SOAP webszolgáltatásából lekérdezi a kiválasztott deviza hivatalos
+						árfolyamait a megadott időszakra, majd kiírja és grafikonon ábrázolja őket.
+					</p>
+
+					<!-- Lekérdező űrlap -->
+					<form method="get" th:action="@{/soap}">
+						<div class="row gtr-uniform">
+							<div class="col-4 col-12-small">
+								<label for="currency">Deviza</label>
+								<select name="currency" id="currency">
+									<option th:each="c : ${currencies}" th:value="${c}" th:text="${c}"
+											th:selected="${c == currency}">EUR</option>
+								</select>
+							</div>
+							<div class="col-4 col-12-small">
+								<label for="startDate">Kezdő dátum</label>
+								<input type="date" name="startDate" id="startDate" th:value="${startDate}" th:max="${today}" required />
+							</div>
+							<div class="col-4 col-12-small">
+								<label for="endDate">Befejező dátum</label>
+								<input type="date" name="endDate" id="endDate" th:value="${endDate}" th:max="${today}" required />
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Lekérdezés" class="primary" /></li>
+								</ul>
+							</div>
+						</div>
+					</form>
+
+					<!-- Hibaüzenet -->
+					<div class="box error-box" th:if="${error}">
+						<p th:text="${error}">Hiba történt.</p>
+					</div>
+
+					<!-- Nincs adat -->
+					<div class="box" th:if="${rates != null and rates.isEmpty()}">
+						<p>A megadott időszakra nincs árfolyam adat (pl. hétvége vagy ünnepnap).</p>
+					</div>
+				</section>
+
+				<th:block th:if="${rates != null and !rates.isEmpty()}">
+
+					<!-- Összesítés -->
+					<section>
+						<header class="major">
+							<h2 th:text="${currency} + ' árfolyam – ' + ${unit} + ' ' + ${currency} + ' forintban'">EUR árfolyam</h2>
+						</header>
+						<div class="stats">
+							<div class="stat">
+								<span class="stat-label">Napok száma</span>
+								<span class="stat-value" th:text="${rates.size()}">0</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">Minimum</span>
+								<span class="stat-value" th:text="${#numbers.formatDecimal(minRate, 1, 'WHITESPACE', 2, 'COMMA')} + ' Ft'">0</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">Maximum</span>
+								<span class="stat-value" th:text="${#numbers.formatDecimal(maxRate, 1, 'WHITESPACE', 2, 'COMMA')} + ' Ft'">0</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">Változás</span>
+								<span class="stat-value"
+									  th:classappend="${change.signum() > 0} ? 'up' : (${change.signum() < 0} ? 'down' : '')"
+									  th:text="${change.signum() > 0 ? '+' : ''} + ${#numbers.formatDecimal(change, 1, 'WHITESPACE', 2, 'COMMA')} + ' Ft'">0</span>
+							</div>
+						</div>
+					</section>
+
+					<!-- Grafikon (Chart.js) -->
+					<section>
+						<header class="major">
+							<h2>Grafikon</h2>
+						</header>
+						<div class="chart-container">
+							<canvas id="rateChart"></canvas>
+						</div>
+					</section>
+
+					<!-- Táblázat -->
+					<section>
+						<header class="major">
+							<h2>Árfolyamok</h2>
+						</header>
+						<div class="table-wrapper">
+							<table class="alt">
+								<thead>
+									<tr>
+										<th>Dátum</th>
+										<th>Deviza</th>
+										<th>Egység</th>
+										<th>Árfolyam (Ft)</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="r : ${rates}">
+										<td th:text="${#temporals.format(r.date, 'yyyy.MM.dd.')}">2026.01.01.</td>
+										<td th:text="${r.currency}">EUR</td>
+										<td th:text="${r.unit}">1</td>
+										<td th:text="${#numbers.formatDecimal(r.rate, 1, 'WHITESPACE', 2, 'COMMA')}">0,00</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+				</th:block>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+	<th:block th:if="${rates != null and !rates.isEmpty()}">
+		<script th:src="@{/js/chart.umd.min.js}"></script>
+		<script th:inline="javascript">
+			const labels = /*[[${chartLabels}]]*/ [];
+			const data = /*[[${chartData}]]*/ [];
+			const title = /*[[${unit + ' ' + currency + ' / HUF'}]]*/ '';
+
+			new Chart(document.getElementById('rateChart'), {
+				type: 'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: title,
+						data: data,
+						borderColor: '#f56a6a',
+						backgroundColor: 'rgba(245, 106, 106, 0.15)',
+						fill: true,
+						tension: 0.25,
+						pointRadius: data.length > 60 ? 0 : 3
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					interaction: { mode: 'index', intersect: false },
+					plugins: {
+						tooltip: {
+							callbacks: {
+								label: ctx => ctx.parsed.y.toLocaleString('hu-HU', { minimumFractionDigits: 2 }) + ' Ft'
+							}
+						}
+					},
+					scales: {
+						y: { title: { display: true, text: 'Ft' } }
+					}
+				}
+			});
+		</script>
+	</th:block>
+
+</body>
+</html>

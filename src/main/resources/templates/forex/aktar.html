@@ -1,0 +1,87 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Forex-AktÁr')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section>
+					<header class="main">
+						<h1>Forex-AktÁr</h1>
+					</header>
+					<p>A kiválasztott instrumentum aktuális vételi és eladási ára az Oanda v20 API-ból.</p>
+
+					<form method="get" th:action="@{/forex/aktar}">
+						<div class="row gtr-uniform">
+							<div class="col-6 col-12-small">
+								<label for="instrument">Instrumentum</label>
+								<select name="instrument" id="instrument">
+									<option th:each="i : ${instruments}" th:value="${i.name}" th:text="${i.name}"
+											th:selected="${i.name == instrument}">EUR_USD</option>
+								</select>
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Lekérdezés" class="primary" /></li>
+								</ul>
+							</div>
+						</div>
+					</form>
+
+					<div class="box error-box" th:if="${error}">
+						<p th:text="${error}">Hiba történt.</p>
+					</div>
+				</section>
+
+				<section th:if="${price}" th:with="dp=${price.instrument.displayPrecision}">
+					<header class="major">
+						<h2 th:text="${price.instrument.displayName} + ' aktuális ár'">EUR/USD aktuális ár</h2>
+					</header>
+					<div class="stats">
+						<div class="stat">
+							<span class="stat-label">Bid (vételi ár)</span>
+							<span class="stat-value" th:text="${#numbers.formatDecimal(price.bid, 1, dp, 'COMMA')}">0</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Ask (eladási ár)</span>
+							<span class="stat-value" th:text="${#numbers.formatDecimal(price.ask, 1, dp, 'COMMA')}">0</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Középár</span>
+							<span class="stat-value" th:text="${#numbers.formatDecimal(price.mid(), 1, dp + 1, 'COMMA')}">0</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Spread</span>
+							<span class="stat-value" th:text="${#numbers.formatDecimal(price.spreadPips(), 1, 1, 'COMMA')} + ' pip'">0</span>
+						</div>
+					</div>
+					<p class="price-meta">
+						Árfolyam időpontja:
+						<strong th:text="${#temporals.format(price.time, 'yyyy.MM.dd. HH:mm:ss', 'Europe/Budapest')}">2026.01.01. 12:00:00</strong>
+						&nbsp;·&nbsp;
+						<span class="badge" th:classappend="${price.tradeable} ? 'badge-open' : 'badge-closed'"
+							  th:text="${price.tradeable} ? 'Piac nyitva' : 'Piac zárva'">Piac nyitva</span>
+					</p>
+					<ul class="actions">
+						<li><a th:href="@{/forex/aktar(instrument=${price.instrument.name})}" class="button">Frissítés</a></li>
+					</ul>
+				</section>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

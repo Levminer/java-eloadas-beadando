@@ -1,0 +1,146 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Forex-HistÁr')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section>
+					<header class="main">
+						<h1>Forex-HistÁr</h1>
+					</header>
+					<p>A kiválasztott instrumentum utolsó 10 historikus ára (középárak) a megadott időfelbontással, az Oanda v20 API-ból.</p>
+
+					<form method="get" th:action="@{/forex/histar}">
+						<div class="row gtr-uniform">
+							<div class="col-6 col-12-small">
+								<label for="instrument">Instrumentum</label>
+								<select name="instrument" id="instrument">
+									<option th:each="i : ${instruments}" th:value="${i.name}" th:text="${i.name}"
+											th:selected="${i.name == instrument}">EUR_USD</option>
+								</select>
+							</div>
+							<div class="col-6 col-12-small">
+								<label for="granularity">Granularity (időfelbontás)</label>
+								<select name="granularity" id="granularity">
+									<option th:each="g : ${granularities}" th:value="${g.key}" th:text="${g.value}"
+											th:selected="${g.key == granularity}">D – napi</option>
+								</select>
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Lekérdezés" class="primary" /></li>
+								</ul>
+							</div>
+						</div>
+					</form>
+
+					<div class="box error-box" th:if="${error}">
+						<p th:text="${error}">Hiba történt.</p>
+					</div>
+				</section>
+
+				<th:block th:if="${candles != null and !candles.isEmpty()}" th:with="dp=${selected.displayPrecision}">
+
+					<section>
+						<header class="major">
+							<h2 th:text="${selected.displayName} + ' – ' + ${granularities.get(granularity)} + ' – utolsó 10 ár'">EUR/USD</h2>
+						</header>
+						<div class="table-wrapper">
+							<table class="alt">
+								<thead>
+									<tr>
+										<th>Időszak kezdete</th>
+										<th>Nyitó</th>
+										<th>Max</th>
+										<th>Min</th>
+										<th>Záró</th>
+										<th>Volumen</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="c : ${candles}">
+										<td>
+											<span th:text="${#temporals.format(c.time, 'yyyy.MM.dd. HH:mm', 'Europe/Budapest')}">2026.01.01. 00:00</span>
+											<span class="badge badge-open" th:unless="${c.complete}">folyamatban</span>
+										</td>
+										<td th:text="${#numbers.formatDecimal(c.open, 1, dp, 'COMMA')}">0</td>
+										<td th:text="${#numbers.formatDecimal(c.high, 1, dp, 'COMMA')}">0</td>
+										<td th:text="${#numbers.formatDecimal(c.low, 1, dp, 'COMMA')}">0</td>
+										<td class="price-close"
+											th:classappend="${c.direction() > 0} ? 'up' : (${c.direction() < 0} ? 'down' : '')"
+											th:text="${#numbers.formatDecimal(c.close, 1, dp, 'COMMA')}">0</td>
+										<td th:text="${c.volume}">0</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</section>
+
+					<section>
+						<header class="major">
+							<h2>Záró árak grafikonon</h2>
+						</header>
+						<div class="chart-container">
+							<canvas id="candleChart"></canvas>
+						</div>
+					</section>
+
+				</th:block>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+	<th:block th:if="${candles != null and !candles.isEmpty()}">
+		<script th:src="@{/js/chart.umd.min.js}"></script>
+		<script th:inline="javascript">
+			const labels = /*[[${chartLabels}]]*/ [];
+			const data = /*[[${chartData}]]*/ [];
+			const title = /*[[${selected.name + ' záró ár'}]]*/ '';
+			const precision = /*[[${selected.displayPrecision}]]*/ 5;
+
+			new Chart(document.getElementById('candleChart'), {
+				type: 'line',
+				data: {
+					labels: labels,
+					datasets: [{
+						label: title,
+						data: data,
+						borderColor: '#f56a6a',
+						backgroundColor: 'rgba(245, 106, 106, 0.15)',
+						fill: true,
+						tension: 0.25,
+						pointRadius: 4
+					}]
+				},
+				options: {
+					responsive: true,
+					maintainAspectRatio: false,
+					interaction: { mode: 'index', intersect: false },
+					plugins: {
+						tooltip: {
+							callbacks: {
+								label: ctx => ctx.parsed.y.toLocaleString('hu-HU', { minimumFractionDigits: precision })
+							}
+						}
+					}
+				}
+			});
+		</script>
+	</th:block>
+
+</body>
+</html>

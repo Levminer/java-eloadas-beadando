@@ -128,3 +128,16 @@ input[type="date"]:focus {
 	background: rgba(245, 106, 106, 0.12);
 	color: #f56a6a;
 }
+
+/* Záró ár színezése: emelkedés zöld, csökkenés piros */
+.price-close {
+	font-weight: 600;
+}
+
+.price-close.up {
+	color: #2e9e6a;
+}
+
+.price-close.down {
+	color: #f56a6a;
+}

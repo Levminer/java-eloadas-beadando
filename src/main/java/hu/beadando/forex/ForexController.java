@@ -6,12 +6,18 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+
 /**
  * Forex menük: Oanda demo számla kezelése.
  */
 @Controller
 @RequestMapping("/forex")
 public class ForexController {
+
+	private static final ZoneId BUDAPEST = ZoneId.of("Europe/Budapest");
 
 	private final OandaClient oanda;
 
@@ -43,6 +49,33 @@ public class ForexController {
 			model.addAttribute("error", e.getMessage());
 		}
 		return "forex/aktar";
+	}
+
+	/** Forex-HistÁr: a kiválasztott instrumentum utolsó 10 historikus ára a megadott időfelbontással. */
+	@GetMapping("/histar")
+	public String histar(@RequestParam(required = false) String instrument,
+						 @RequestParam(required = false) String granularity,
+						 Model model) {
+		model.addAttribute("instrument", instrument != null ? instrument : "EUR_USD");
+		model.addAttribute("granularity", granularity != null ? granularity : "D");
+		model.addAttribute("granularities", OandaClient.GRANULARITIES);
+		try {
+			model.addAttribute("instruments", oanda.getInstruments());
+			if (instrument != null && granularity != null) {
+				List<Candle> candles = oanda.getCandles(instrument, granularity, 10);
+				model.addAttribute("candles", candles);
+				model.addAttribute("selected", oanda.findInstrument(instrument));
+				// A grafikon időrendben (a legrégebbi elöl). Az Oanda az időszak kezdetét adja meg,
+				// a napi gyertya pl. New York-i 17:00-kor (budapesti 22/23 óra) kezdődik, ezért kell az óra is.
+				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM.dd. HH:mm").withZone(BUDAPEST);
+				List<Candle> chronological = candles.reversed();
+				model.addAttribute("chartLabels", chronological.stream().map(c -> formatter.format(c.time())).toList());
+				model.addAttribute("chartData", chronological.stream().map(c -> c.close().doubleValue()).toList());
+			}
+		} catch (OandaClient.OandaException e) {
+			model.addAttribute("error", e.getMessage());
+		}
+		return "forex/histar";
 	}
 
 }

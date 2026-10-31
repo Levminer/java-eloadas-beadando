@@ -6,13 +6,18 @@ import com.oanda.v20.ExecuteException;
 import com.oanda.v20.RequestException;
 import com.oanda.v20.account.AccountID;
 import com.oanda.v20.account.AccountInstrumentsRequest;
+import com.oanda.v20.instrument.CandlestickGranularity;
+import com.oanda.v20.instrument.InstrumentCandlesRequest;
 import com.oanda.v20.pricing.ClientPrice;
+import com.oanda.v20.primitives.InstrumentName;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Oanda kliens a hivatalos v20 Java könyvtárral (https://github.com/oanda/v20-java),
@@ -25,6 +30,21 @@ public class OandaClient {
 	private static final List<String> INSTRUMENTS = List.of(
 			"EUR_USD", "GBP_USD", "USD_JPY", "USD_CHF", "AUD_USD", "USD_CAD",
 			"NZD_USD", "EUR_GBP", "EUR_JPY", "EUR_HUF", "USD_HUF");
+
+	/** A választható időfelbontások (granularity) és magyar megnevezésük. */
+	public static final Map<String, String> GRANULARITIES = new LinkedHashMap<>();
+
+	static {
+		GRANULARITIES.put("M1", "M1 – 1 perces");
+		GRANULARITIES.put("M5", "M5 – 5 perces");
+		GRANULARITIES.put("M15", "M15 – 15 perces");
+		GRANULARITIES.put("M30", "M30 – 30 perces");
+		GRANULARITIES.put("H1", "H1 – 1 órás");
+		GRANULARITIES.put("H4", "H4 – 4 órás");
+		GRANULARITIES.put("D", "D – napi");
+		GRANULARITIES.put("W", "W – heti");
+		GRANULARITIES.put("M", "M – havi");
+	}
 
 	private final Context ctx;
 	private final AccountID accountId;
@@ -80,7 +100,24 @@ public class OandaClient {
 		});
 	}
 
-	private Instrument findInstrument(String name) {
+	/** Az utolsó {@code count} historikus ár (gyertya), a legfrissebb elöl (Forex-HistÁr menü). */
+	public List<Candle> getCandles(String instrumentName, String granularity, int count) {
+		Instrument instrument = findInstrument(instrumentName);
+		if (!GRANULARITIES.containsKey(granularity)) {
+			throw new OandaException("Ismeretlen granularity: " + granularity, null);
+		}
+		return call(() -> {
+			InstrumentCandlesRequest request = new InstrumentCandlesRequest(new InstrumentName(instrument.name()))
+					.setGranularity(CandlestickGranularity.valueOf(granularity))
+					.setCount((long) count);
+			return ctx.instrument.candles(request).getCandles().stream()
+					.map(Candle::from)
+					.sorted(Comparator.comparing(Candle::time).reversed())
+					.toList();
+		});
+	}
+
+	public Instrument findInstrument(String name) {
 		return getInstruments().stream()
 				.filter(i -> i.name().equals(name))
 				.findFirst()

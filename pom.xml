@@ -63,6 +63,26 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<!-- mvn spring-boot:run esetén ugyanaz, mint a JAR manifestjében lévő Add-Opens -->
+					<jvmArguments>--add-opens java.base/java.lang=ALL-UNNAMED</jvmArguments>
+				</configuration>
+			</plugin>
+			<!--
+				Az Oanda v20 könyvtár a hibaválaszokat (pl. 404 nem létező trade zárásakor) Gson-nal
+				alakítja kivétellé, ehhez a java.lang csomagot reflexióval el kell érnie.
+				Az Add-Opens a "java -jar beadando.jar" indításnál külön kapcsoló nélkül érvényes.
+			-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifestEntries>
+							<Add-Opens>java.base/java.lang</Add-Opens>
+						</manifestEntries>
+					</archive>
+				</configuration>
 			</plugin>
 			<!-- SOAP kliens osztályok generálása az MNB WSDL-ből (src/main/wsdl) -->
 			<plugin>

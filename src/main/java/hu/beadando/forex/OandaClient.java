@@ -1,5 +1,6 @@
 package hu.beadando.forex;
 
+import com.google.gson.JsonParseException;
 import com.oanda.v20.Context;
 import com.oanda.v20.ContextBuilder;
 import com.oanda.v20.ExecuteException;
@@ -14,6 +15,10 @@ import com.oanda.v20.order.OrderCreateResponse;
 import com.oanda.v20.pricing.ClientPrice;
 import com.oanda.v20.primitives.DecimalNumber;
 import com.oanda.v20.primitives.InstrumentName;
+import com.oanda.v20.trade.TradeClose404RequestException;
+import com.oanda.v20.trade.TradeCloseRequest;
+import com.oanda.v20.trade.TradeCloseResponse;
+import com.oanda.v20.trade.TradeSpecifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -162,6 +167,29 @@ public class OandaClient {
 				.toList());
 	}
 
+	/** Egy nyitott pozíció (trade) teljes zárása piaci áron (Forex-Zár menü). */
+	public CloseResult closeTrade(long tradeId) {
+		if (tradeId <= 0) {
+			throw new OandaException("A trade azonosító csak pozitív egész szám lehet.", null);
+		}
+		String id = Long.toString(tradeId);
+		return call(() -> {
+			TradeCloseResponse response;
+			try {
+				response = ctx.trade.close(new TradeCloseRequest(accountId, new TradeSpecifier(id)));
+			} catch (TradeClose404RequestException e) {
+				throw new OandaException("Nincs nyitott pozíció ezzel az azonosítóval: " + id, e);
+			}
+			if (response.getOrderFillTransaction() != null) {
+				return CloseResult.closed(id, response.getOrderFillTransaction());
+			}
+			if (response.getOrderCancelTransaction() != null) {
+				return CloseResult.cancelled(id, response.getOrderCancelTransaction());
+			}
+			throw new OandaException("Az Oanda nem teljesítette és nem is utasította el a zárást.", null);
+		});
+	}
+
 	public Instrument findInstrument(String name) {
 		return getInstruments().stream()
 				.filter(i -> i.name().equals(name))
@@ -186,6 +214,9 @@ public class OandaClient {
 			throw new OandaException("Oanda hiba (" + e.getStatus() + "): " + e.getErrorMessage(), e);
 		} catch (ExecuteException e) {
 			throw new OandaException("Nem sikerült elérni az Oanda szervert: " + e.getMessage(), e);
+		} catch (JsonParseException e) {
+			// A v20 könyvtár a hibaválaszt nem tudta kivétellé alakítani (hiányzó Add-Opens, lásd pom.xml)
+			throw new OandaException("Az Oanda hibaválaszát nem sikerült feldolgozni: " + e.getMessage(), e);
 		}
 	}
 

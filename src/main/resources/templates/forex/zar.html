@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Forex-Zár')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section>
+					<header class="main">
+						<h1>Forex-Zár</h1>
+					</header>
+					<p>Egy nyitott pozíció (trade) teljes zárása az Oanda demo számlán, aktuális piaci áron.
+						A trade azonosítója a <a th:href="@{/forex/poz}">Forex-Poz</a> menüpontban látható.</p>
+
+					<form method="post" th:action="@{/forex/zar}">
+						<div class="row gtr-uniform">
+							<div class="col-6 col-12-small">
+								<label for="tradeId">Trade ID</label>
+								<input type="number" name="tradeId" id="tradeId" min="1" step="1" required placeholder="pl. 12"
+									   th:value="${result != null and result.closed} ? '' : ${tradeId}" />
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Pozíció zárása" class="primary" /></li>
+								</ul>
+							</div>
+						</div>
+					</form>
+
+					<div class="box error-box" th:if="${closeError}">
+						<p th:text="${closeError}">Hiba történt.</p>
+					</div>
+
+					<div class="box error-box" th:if="${result != null and !result.closed}">
+						<p>
+							<strong>A zárást az Oanda elutasította</strong>
+							(trade <span th:text="${result.tradeId}">12</span>):
+							<span th:text="${result.cancelReason}">a piac jelenleg zárva van</span>
+						</p>
+					</div>
+
+					<div class="box error-box" th:if="${error}">
+						<p th:text="${error}">Hiba történt.</p>
+					</div>
+				</section>
+
+				<section th:if="${result != null and result.closed}">
+					<header class="major">
+						<h2>Pozíció lezárva</h2>
+					</header>
+					<div class="stats">
+						<div class="stat">
+							<span class="stat-label">Trade ID</span>
+							<span class="stat-value" th:text="${result.tradeId}">12</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Instrumentum</span>
+							<span class="stat-value" th:text="${result.instrument}">EUR_USD</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Lezárt pozíció</span>
+							<span class="stat-value" th:classappend="${result.wasLong()} ? 'up' : 'down'"
+								  th:text="(${result.wasLong()} ? 'Long ' : 'Short ') + ${#numbers.formatInteger(result.units.abs(), 1, 'WHITESPACE')}">Long 1000</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Záró ár</span>
+							<span class="stat-value" th:text="${#strings.replace(result.price.toPlainString(), '.', ',')}">1,16000</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Realizált P/L</span>
+							<span class="stat-value"
+								  th:classappend="${result.realizedPL.signum() > 0} ? 'up' : (${result.realizedPL.signum() < 0} ? 'down' : '')"
+								  th:text="${#numbers.formatDecimal(result.realizedPL, 1, 'WHITESPACE', 2, 'COMMA')} + ' ' + ${currency}">0</span>
+						</div>
+					</div>
+					<p class="price-meta">
+						Zárás időpontja:
+						<strong th:text="${#temporals.format(result.time, 'yyyy.MM.dd. HH:mm:ss', 'Europe/Budapest')}">2026.01.01. 12:00:00</strong>
+					</p>
+				</section>
+
+				<section th:if="${trades != null}">
+					<header class="major">
+						<h2>Nyitott pozíciók</h2>
+					</header>
+					<p th:if="${trades.isEmpty()}">Jelenleg nincs nyitott pozíció a számlán.</p>
+					<div class="table-wrapper" th:unless="${trades.isEmpty()}">
+						<table class="alt">
+							<thead>
+								<tr>
+									<th>Trade ID</th>
+									<th>Instrumentum</th>
+									<th>Irány</th>
+									<th>Mennyiség</th>
+									<th>Nyitó ár</th>
+									<th th:text="'Nem realizált P/L (' + ${currency} + ')'">Nem realizált P/L</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr th:each="t : ${trades}">
+									<td><strong th:text="${t.id}">12</strong></td>
+									<td th:text="${t.instrument}">EUR_USD</td>
+									<td>
+										<span class="price-close" th:classappend="${t.isLong()} ? 'up' : 'down'"
+											  th:text="${t.isLong()} ? 'Long' : 'Short'">Long</span>
+									</td>
+									<td th:text="${#numbers.formatInteger(t.units.abs(), 1, 'WHITESPACE')}">1000</td>
+									<td th:text="${#strings.replace(t.price.toPlainString(), '.', ',')}">1,16000</td>
+									<td class="price-close"
+										th:classappend="${t.unrealizedPL.signum() > 0} ? 'up' : (${t.unrealizedPL.signum() < 0} ? 'down' : '')"
+										th:text="${#numbers.formatDecimal(t.unrealizedPL, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+									<td><a th:href="@{/forex/zar(tradeId=${t.id})}" class="button small">Kiválasztás</a></td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</section>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

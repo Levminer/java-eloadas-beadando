@@ -43,7 +43,6 @@ public record OrderResult(boolean filled, String instrument, BigDecimal units, S
 	}
 
 	static OrderResult cancelled(String instrument, BigDecimal units, OrderCancelTransaction cancel) {
-		String reason = cancel.getReason() != null ? cancel.getReason().name() : "ismeretlen";
 		return new OrderResult(
 				false,
 				instrument,
@@ -51,7 +50,13 @@ public record OrderResult(boolean filled, String instrument, BigDecimal units, S
 				null,
 				null,
 				Instant.parse(cancel.getTime().toString()),
-				CANCEL_REASONS.getOrDefault(reason, reason));
+				cancelReason(cancel));
+	}
+
+	/** Az elutasítás oka magyarul (ha ismert), különben az Oanda kódja. */
+	static String cancelReason(OrderCancelTransaction cancel) {
+		String reason = cancel.getReason() != null ? cancel.getReason().name() : "ismeretlen";
+		return CANCEL_REASONS.getOrDefault(reason, reason);
 	}
 
 	/** Long (vétel) vagy Short (eladás) a megbízás. */

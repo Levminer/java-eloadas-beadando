@@ -133,4 +133,40 @@ public class ForexController {
 		return "forex/poz";
 	}
 
+	/**
+	 * Forex-Zár: űrlap egy pozíció zárásához. A Forex-Poz oldal „Zárás” gombja a tradeId-t
+	 * előre kitöltve adja át; segítségként a nyitott pozíciók listáját is megjelenítjük.
+	 */
+	@GetMapping("/zar")
+	public String zar(@RequestParam(required = false) String tradeId, Model model) {
+		if (!model.containsAttribute("tradeId")) {
+			model.addAttribute("tradeId", tradeId);
+		}
+		try {
+			model.addAttribute("currency", oanda.getAccount().currency());
+			model.addAttribute("trades", oanda.getOpenTrades());
+		} catch (OandaClient.OandaException e) {
+			model.addAttribute("error", e.getMessage());
+		}
+		return "forex/zar";
+	}
+
+	/** Forex-Zár: a megadott pozíció zárása piaci áron (POST/Redirect/GET). */
+	@PostMapping("/zar")
+	public String zarPost(@RequestParam String tradeId, RedirectAttributes redirect) {
+		redirect.addFlashAttribute("tradeId", tradeId);
+		try {
+			long parsedId;
+			try {
+				parsedId = Long.parseLong(tradeId.trim());
+			} catch (NumberFormatException e) {
+				throw new OandaClient.OandaException("A trade azonosító csak egész szám lehet.", e);
+			}
+			redirect.addFlashAttribute("result", oanda.closeTrade(parsedId));
+		} catch (OandaClient.OandaException e) {
+			redirect.addFlashAttribute("closeError", e.getMessage());
+		}
+		return "redirect:/forex/zar";
+	}
+
 }

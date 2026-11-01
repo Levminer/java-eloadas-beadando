@@ -30,7 +30,7 @@ Ezután az alkalmazás a böngészőben érhető el: <http://localhost:8080>
 ## Felhasznált technológiák
 
 - **Spring Boot 4** (Spring MVC, Thymeleaf), **Java 25**, Maven
-- **SOAP kliens:** JAX-WS (`jaxws-maven-plugin` wsimport) az MNB WSDL-jéből (`src/main/wsdl`) generált osztályokkal
+- **SOAP kliens:** JAX-WS (`jaxws-maven-plugin` wsimport) az MNB WSDL-jéből (`src/main/resources/wsdl`, a JAR-ba csomagolva) generált osztályokkal
 - **Oanda:** a hivatalos [v20 Java könyvtár](https://github.com/oanda/v20-java), fxTrade Practice (demo) számla
 - **Grafikonok:** [Chart.js](https://www.chartjs.org/)
 - **Sablon:** [Editorial by HTML5 UP](https://html5up.net/editorial) (CCA 3.0 licenc)
@@ -38,7 +38,7 @@ Ezután az alkalmazás a böngészőben érhető el: <http://localhost:8080>
 ## Fordítás
 
 ```
-mvnw package
+mvnw.cmd package
 ```
 
 A kész JAR a `target/beadando.jar` helyen jön létre.

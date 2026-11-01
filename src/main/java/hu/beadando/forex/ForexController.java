@@ -38,42 +38,41 @@ public class ForexController {
 		return "forex/account";
 	}
 
-	/** Forex-AktÁr: a kiválasztott instrumentum aktuális ára. */
+	/** Forex-AktÁr: a kiválasztott instrumentum aktuális ára (első megnyitáskor az EUR_USD-é). */
 	@GetMapping("/aktar")
-	public String aktar(@RequestParam(required = false) String instrument, Model model) {
-		model.addAttribute("instrument", instrument != null ? instrument : "EUR_USD");
+	public String aktar(@RequestParam(defaultValue = "EUR_USD") String instrument, Model model) {
+		model.addAttribute("instrument", instrument);
 		try {
 			model.addAttribute("instruments", oanda.getInstruments());
-			if (instrument != null) {
-				model.addAttribute("price", oanda.getPrice(instrument));
-			}
+			model.addAttribute("price", oanda.getPrice(instrument));
 		} catch (OandaClient.OandaException e) {
 			model.addAttribute("error", e.getMessage());
 		}
 		return "forex/aktar";
 	}
 
-	/** Forex-HistÁr: a kiválasztott instrumentum utolsó 10 historikus ára a megadott időfelbontással. */
+	/**
+	 * Forex-HistÁr: a kiválasztott instrumentum utolsó 10 historikus ára a megadott időfelbontással
+	 * (első megnyitáskor EUR_USD, napi).
+	 */
 	@GetMapping("/histar")
-	public String histar(@RequestParam(required = false) String instrument,
-						 @RequestParam(required = false) String granularity,
+	public String histar(@RequestParam(defaultValue = "EUR_USD") String instrument,
+						 @RequestParam(defaultValue = "D") String granularity,
 						 Model model) {
-		model.addAttribute("instrument", instrument != null ? instrument : "EUR_USD");
-		model.addAttribute("granularity", granularity != null ? granularity : "D");
+		model.addAttribute("instrument", instrument);
+		model.addAttribute("granularity", granularity);
 		model.addAttribute("granularities", OandaClient.GRANULARITIES);
 		try {
 			model.addAttribute("instruments", oanda.getInstruments());
-			if (instrument != null && granularity != null) {
-				List<Candle> candles = oanda.getCandles(instrument, granularity, 10);
-				model.addAttribute("candles", candles);
-				model.addAttribute("selected", oanda.findInstrument(instrument));
-				// A grafikon időrendben (a legrégebbi elöl). Az Oanda az időszak kezdetét adja meg,
-				// a napi gyertya pl. New York-i 17:00-kor (budapesti 22/23 óra) kezdődik, ezért kell az óra is.
-				DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM.dd. HH:mm").withZone(BUDAPEST);
-				List<Candle> chronological = candles.reversed();
-				model.addAttribute("chartLabels", chronological.stream().map(c -> formatter.format(c.time())).toList());
-				model.addAttribute("chartData", chronological.stream().map(c -> c.close().doubleValue()).toList());
-			}
+			List<Candle> candles = oanda.getCandles(instrument, granularity, 10);
+			model.addAttribute("candles", candles);
+			model.addAttribute("selected", oanda.findInstrument(instrument));
+			// A grafikon időrendben (a legrégebbi elöl). Az Oanda az időszak kezdetét adja meg,
+			// a napi gyertya pl. New York-i 17:00-kor (budapesti 22/23 óra) kezdődik, ezért kell az óra is.
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MM.dd. HH:mm").withZone(BUDAPEST);
+			List<Candle> chronological = candles.reversed();
+			model.addAttribute("chartLabels", chronological.stream().map(c -> formatter.format(c.time())).toList());
+			model.addAttribute("chartData", chronological.stream().map(c -> c.close().doubleValue()).toList());
 		} catch (OandaClient.OandaException e) {
 			model.addAttribute("error", e.getMessage());
 		}

@@ -30,23 +30,28 @@ public class SoapController {
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
 			Model model) {
 
-		// Alapértelmezés: EUR, az elmúlt 30 nap
+		// Alapértelmezés: EUR, az elmúlt 30 nap – az oldal első megnyitásakor is ezzel kérdezünk le
 		LocalDate today = LocalDate.now();
-		model.addAttribute("currency", currency != null ? currency : "EUR");
-		model.addAttribute("startDate", startDate != null ? startDate : today.minusDays(30));
-		model.addAttribute("endDate", endDate != null ? endDate : today);
+		currency = currency != null ? currency : "EUR";
+		startDate = startDate != null ? startDate : today.minusDays(30);
+		endDate = endDate != null ? endDate : today;
+		model.addAttribute("currency", currency);
+		model.addAttribute("startDate", startDate);
+		model.addAttribute("endDate", endDate);
 		model.addAttribute("today", today);
 
+		List<String> currencies;
 		try {
-			model.addAttribute("currencies", mnbService.getCurrencies());
+			currencies = mnbService.getCurrencies();
+			model.addAttribute("currencies", currencies);
 		} catch (MnbService.MnbException e) {
 			model.addAttribute("currencies", List.of("EUR", "USD", "GBP", "CHF"));
 			model.addAttribute("error", e.getMessage());
 			return "soap";
 		}
 
-		// Űrlap elküldése nélkül csak az üres űrlapot mutatjuk
-		if (currency == null || startDate == null || endDate == null) {
+		if (!currencies.contains(currency)) {
+			model.addAttribute("error", "Ismeretlen deviza: " + currency);
 			return "soap";
 		}
 

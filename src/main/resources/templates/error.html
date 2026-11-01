@@ -1,0 +1,51 @@
+<!DOCTYPE HTML>
+<!--
+	Saját hibaoldal a Spring Boot alapértelmezett "Whitelabel Error Page" helyett
+	(pl. nem létező oldal vagy hibás paraméter esetén).
+-->
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Hiba')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section th:with="code=${status != null ? status : 500}">
+					<header class="main">
+						<h1 th:text="${code} + ' – ' + (${code == 404} ? 'Az oldal nem található'
+								: (${code == 400} ? 'Hibás kérés'
+								: (${code == 405} ? 'Nem engedélyezett művelet' : 'Váratlan hiba')))">404 – Az oldal nem található</h1>
+					</header>
+
+					<div class="box error-box">
+						<p th:switch="${code}">
+							<span th:case="404">A keresett oldal nem létezik. Lehet, hogy elírták a címet.</span>
+							<span th:case="400">A kérés hibás vagy hiányzó paramétert tartalmaz (pl. érvénytelen dátum vagy szám).</span>
+							<span th:case="405">Ez a művelet ezen a címen nem engedélyezett.</span>
+							<span th:case="*">Váratlan hiba történt az alkalmazásban. Kérjük, próbálja újra később.</span>
+						</p>
+						<p th:if="${path}">Cím: <code th:text="${path}">/</code></p>
+					</div>
+
+					<ul class="actions">
+						<li><a th:href="@{/}" class="button primary">Vissza a főoldalra</a></li>
+					</ul>
+				</section>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

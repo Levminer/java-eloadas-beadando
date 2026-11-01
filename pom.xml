@@ -84,7 +84,10 @@
 					</archive>
 				</configuration>
 			</plugin>
-			<!-- SOAP kliens osztályok generálása az MNB WSDL-ből (src/main/wsdl) -->
+			<!--
+				SOAP kliens osztályok generálása az MNB WSDL-ből (src/main/resources/wsdl).
+				A WSDL a JAR-ba is bekerül, futás közben a MnbService onnan tölti be.
+			-->
 			<plugin>
 				<groupId>com.sun.xml.ws</groupId>
 				<artifactId>jaxws-maven-plugin</artifactId>
@@ -96,7 +99,7 @@
 							<goal>wsimport</goal>
 						</goals>
 						<configuration>
-							<wsdlDirectory>${project.basedir}/src/main/wsdl</wsdlDirectory>
+							<wsdlDirectory>${project.basedir}/src/main/resources/wsdl</wsdlDirectory>
 							<wsdlFiles>
 								<wsdlFile>arfolyamok.wsdl</wsdlFile>
 							</wsdlFiles>

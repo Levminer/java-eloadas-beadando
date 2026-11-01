@@ -11,6 +11,7 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.ByteArrayInputStream;
 import java.math.BigDecimal;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -22,21 +23,30 @@ import java.util.List;
  * (http://www.mnb.hu/arfolyamok.asmx).
  * <p>
  * A kliens osztályokat (hu.beadando.soap.mnb) a jaxws-maven-plugin generálja
- * a src/main/wsdl mappában lévő WSDL-ből. A webszolgáltatás XML szövegként
+ * a src/main/resources/wsdl mappában lévő WSDL-ből. A webszolgáltatás XML szövegként
  * adja vissza az eredményt, ezt itt dolgozzuk fel.
  */
 @Service
 public class MnbService {
+
+	private static final String WSDL = "/wsdl/arfolyamok.wsdl";
 
 	private MNBArfolyamServiceSoap port;
 
 	/** A devizák listája ritkán változik, ezért elég egyszer lekérdezni. */
 	private List<String> currencies;
 
-	/** A SOAP port létrehozása csak az első híváskor, mert ehhez letölti a WSDL-t. */
+	/**
+	 * A SOAP port létrehozása az első híváskor. A WSDL-t nem az MNB szerveréről töltjük le,
+	 * hanem a JAR-ba csomagolt példányt használjuk (src/main/resources/wsdl).
+	 */
 	private synchronized MNBArfolyamServiceSoap getPort() {
 		if (port == null) {
-			port = new MNBArfolyamServiceSoapImpl().getCustomBindingMNBArfolyamServiceSoap();
+			URL wsdl = MnbService.class.getResource(WSDL);
+			if (wsdl == null) {
+				throw new MnbException("Nem található a WSDL fájl: " + WSDL, null);
+			}
+			port = new MNBArfolyamServiceSoapImpl(wsdl).getCustomBindingMNBArfolyamServiceSoap();
 		}
 		return port;
 	}

@@ -38,8 +38,9 @@
 	}
 }
 
-/* A dátum mezők nézzenek ki úgy, mint a téma többi beviteli mezője */
-input[type="date"] {
+/* A dátum és szám mezők nézzenek ki úgy, mint a téma többi beviteli mezője */
+input[type="date"],
+input[type="number"] {
 	appearance: none;
 	background: #ffffff;
 	border-radius: 0.375em;
@@ -52,7 +53,8 @@ input[type="date"] {
 	width: 100%;
 }
 
-input[type="date"]:focus {
+input[type="date"]:focus,
+input[type="number"]:focus {
 	border-color: #f56a6a;
 	box-shadow: 0 0 0 1px #f56a6a;
 }
@@ -139,5 +141,21 @@ input[type="date"]:focus {
 }
 
 .price-close.down {
+	color: #f56a6a;
+}
+
+/* Forex-Nyit: Long / Short jelzés a mennyiség mező alatt */
+.units-hint {
+	color: #9fa3a6;
+	font-size: 0.9em;
+	font-weight: 600;
+	margin: 0.5em 0 0 0;
+}
+
+.units-hint.up {
+	color: #2e9e6a;
+}
+
+.units-hint.down {
 	color: #f56a6a;
 }

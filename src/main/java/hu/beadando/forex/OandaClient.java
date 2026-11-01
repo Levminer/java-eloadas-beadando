@@ -8,15 +8,21 @@ import com.oanda.v20.account.AccountID;
 import com.oanda.v20.account.AccountInstrumentsRequest;
 import com.oanda.v20.instrument.CandlestickGranularity;
 import com.oanda.v20.instrument.InstrumentCandlesRequest;
+import com.oanda.v20.order.MarketOrderRequest;
+import com.oanda.v20.order.OrderCreateRequest;
+import com.oanda.v20.order.OrderCreateResponse;
 import com.oanda.v20.pricing.ClientPrice;
+import com.oanda.v20.primitives.DecimalNumber;
 import com.oanda.v20.primitives.InstrumentName;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -45,6 +51,9 @@ public class OandaClient {
 		GRANULARITIES.put("W", "W – heti");
 		GRANULARITIES.put("M", "M – havi");
 	}
+
+	/** Egy megbízás maximális mennyisége (elgépelés elleni védelem). */
+	public static final long MAX_UNITS = 1_000_000;
 
 	private final Context ctx;
 	private final AccountID accountId;
@@ -114,6 +123,34 @@ public class OandaClient {
 					.map(Candle::from)
 					.sorted(Comparator.comparing(Candle::time).reversed())
 					.toList();
+		});
+	}
+
+	/**
+	 * Pozíció nyitása piaci áron (Forex-Nyit menü).
+	 *
+	 * @param units pozitív: Long (vétel), negatív: Short (eladás)
+	 */
+	public OrderResult openMarketOrder(String instrumentName, long units) {
+		Instrument instrument = findInstrument(instrumentName);
+		if (units == 0) {
+			throw new OandaException("A mennyiség nem lehet 0.", null);
+		}
+		if (Math.abs(units) > MAX_UNITS) {
+			throw new OandaException(String.format(Locale.of("hu"), "A mennyiség legfeljebb ±%,d egység lehet.", MAX_UNITS), null);
+		}
+		return call(() -> {
+			MarketOrderRequest order = new MarketOrderRequest()
+					.setInstrument(new InstrumentName(instrument.name()))
+					.setUnits(new DecimalNumber(BigDecimal.valueOf(units)));
+			OrderCreateResponse response = ctx.order.create(new OrderCreateRequest(accountId).setOrder(order));
+			if (response.getOrderFillTransaction() != null) {
+				return OrderResult.filled(instrument.name(), response.getOrderFillTransaction());
+			}
+			if (response.getOrderCancelTransaction() != null) {
+				return OrderResult.cancelled(instrument.name(), BigDecimal.valueOf(units), response.getOrderCancelTransaction());
+			}
+			throw new OandaException("Az Oanda nem teljesítette és nem is utasította el a megbízást.", null);
 		});
 	}
 

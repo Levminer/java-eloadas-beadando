@@ -1,0 +1,132 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Forex-Nyit')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section>
+					<header class="main">
+						<h1>Forex-Nyit</h1>
+					</header>
+					<p>Pozíció nyitása az Oanda demo számlán, aktuális piaci áron (market order).
+						Pozitív mennyiség <strong>Long</strong> (vétel), negatív mennyiség <strong>Short</strong> (eladás) pozíciót nyit.</p>
+
+					<form method="post" th:action="@{/forex/nyit}">
+						<div class="row gtr-uniform">
+							<div class="col-6 col-12-small">
+								<label for="instrument">Instrumentum</label>
+								<select name="instrument" id="instrument">
+									<option th:each="i : ${instruments}" th:value="${i.name}" th:text="${i.name}"
+											th:selected="${i.name == instrument}">EUR_USD</option>
+								</select>
+							</div>
+							<div class="col-6 col-12-small">
+								<label for="units">Mennyiség (egység)</label>
+								<input type="number" name="units" id="units" step="1" required
+									   th:value="${units}" th:min="${-maxUnits}" th:max="${maxUnits}" value="1000" />
+								<p class="units-hint" id="unitsHint">Long (vétel)</p>
+							</div>
+							<div class="col-12">
+								<ul class="actions">
+									<li><input type="submit" value="Pozíció nyitása" class="primary" /></li>
+								</ul>
+							</div>
+						</div>
+					</form>
+
+					<div class="box error-box" th:if="${error}">
+						<p th:text="${error}">Hiba történt.</p>
+					</div>
+
+					<div class="box error-box" th:if="${result != null and !result.filled}">
+						<p>
+							<strong>A megbízást az Oanda elutasította:</strong>
+							<span th:text="${result.cancelReason}">a piac jelenleg zárva van</span>
+							(<span th:text="${result.instrument}">EUR_USD</span>,
+							<span th:text="${result.isLong()} ? 'Long' : 'Short'">Long</span>
+							<span th:text="${#numbers.formatInteger(result.units.abs(), 1, 'WHITESPACE')}">1000</span> egység).
+						</p>
+					</div>
+				</section>
+
+				<section th:if="${result != null and result.filled}">
+					<header class="major">
+						<h2>Pozíció megnyitva</h2>
+					</header>
+					<div class="stats">
+						<div class="stat">
+							<span class="stat-label">Trade ID</span>
+							<span class="stat-value" th:text="${result.tradeId ?: '–'}">12</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Instrumentum</span>
+							<span class="stat-value" th:text="${result.instrument}">EUR_USD</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Irány</span>
+							<span class="stat-value" th:classappend="${result.isLong()} ? 'up' : 'down'"
+								  th:text="${result.isLong()} ? 'Long' : 'Short'">Long</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Mennyiség</span>
+							<span class="stat-value" th:text="${#numbers.formatInteger(result.units.abs(), 1, 'WHITESPACE')}">1000</span>
+						</div>
+						<div class="stat">
+							<span class="stat-label">Nyitó ár</span>
+							<span class="stat-value" th:text="${#strings.replace(result.price.toPlainString(), '.', ',')}">1,16000</span>
+						</div>
+					</div>
+					<p class="price-meta">
+						Teljesülés időpontja:
+						<strong th:text="${#temporals.format(result.time, 'yyyy.MM.dd. HH:mm:ss', 'Europe/Budapest')}">2026.01.01. 12:00:00</strong>
+					</p>
+					<p th:if="${result.tradeId == null}">
+						A számlán nincs hedging, ezért a megbízás egy meglévő ellentétes pozíciót csökkentett vagy zárt le, új pozíció nem nyílt.
+					</p>
+					<ul class="actions">
+						<li><a th:href="@{/forex/poz}" class="button primary">Nyitott pozíciók</a></li>
+					</ul>
+				</section>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+	<script>
+		// A mennyiség előjele alapján kiírjuk, hogy Long vagy Short pozíció nyílik
+		const unitsInput = document.getElementById('units');
+		const unitsHint = document.getElementById('unitsHint');
+
+		function updateHint() {
+			const value = Number(unitsInput.value);
+			unitsHint.classList.remove('up', 'down');
+			if (!unitsInput.value || value === 0) {
+				unitsHint.textContent = 'A mennyiség nem lehet 0';
+			} else if (value > 0) {
+				unitsHint.textContent = 'Long (vétel)';
+				unitsHint.classList.add('up');
+			} else {
+				unitsHint.textContent = 'Short (eladás)';
+				unitsHint.classList.add('down');
+			}
+		}
+
+		unitsInput.addEventListener('input', updateHint);
+		updateHint();
+	</script>
+
+</body>
+</html>

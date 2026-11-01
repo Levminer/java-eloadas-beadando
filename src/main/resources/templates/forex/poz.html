@@ -1,0 +1,115 @@
+<!DOCTYPE HTML>
+<html lang="hu" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/layout :: head('Forex-Poz')}"></head>
+<body class="is-preload">
+
+	<div id="wrapper">
+
+		<div id="main">
+			<div class="inner">
+
+				<header th:replace="~{fragments/layout :: pageHeader}"></header>
+
+				<section>
+					<header class="main">
+						<h1>Forex-Poz</h1>
+					</header>
+					<p>Az Oanda demo számlán jelenleg nyitott pozíciók az Oanda v20 API-ból.</p>
+
+					<div class="box error-box" th:if="${error}">
+						<p th:text="${error}">Hiba történt.</p>
+					</div>
+				</section>
+
+				<th:block th:if="${trades != null}" th:with="cur=${account.currency}">
+
+					<section>
+						<div class="stats">
+							<div class="stat">
+								<span class="stat-label">Nyitott pozíciók</span>
+								<span class="stat-value" th:text="${trades.size()}">0</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">Nem realizált P/L</span>
+								<span class="stat-value"
+									  th:classappend="${account.unrealizedPL.signum() > 0} ? 'up' : (${account.unrealizedPL.signum() < 0} ? 'down' : '')"
+									  th:text="${#numbers.formatDecimal(account.unrealizedPL, 1, 'WHITESPACE', 2, 'COMMA')} + ' ' + ${cur}">0</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">Felhasznált fedezet</span>
+								<span class="stat-value" th:text="${#numbers.formatDecimal(account.marginUsed, 1, 'WHITESPACE', 2, 'COMMA')} + ' ' + ${cur}">0</span>
+							</div>
+							<div class="stat">
+								<span class="stat-label">NAV</span>
+								<span class="stat-value" th:text="${#numbers.formatDecimal(account.nav, 1, 'WHITESPACE', 2, 'COMMA')} + ' ' + ${cur}">0</span>
+							</div>
+						</div>
+					</section>
+
+					<section>
+						<header class="major">
+							<h2>Nyitott pozíciók</h2>
+						</header>
+
+						<p th:if="${trades.isEmpty()}">
+							Jelenleg nincs nyitott pozíció a számlán.
+							Pozíciót a <a th:href="@{/forex/nyit}">Forex-Nyit</a> menüpontban lehet nyitni.
+						</p>
+
+						<div class="table-wrapper" th:unless="${trades.isEmpty()}">
+							<table class="alt">
+								<thead>
+									<tr>
+										<th>Trade ID</th>
+										<th>Instrumentum</th>
+										<th>Irány</th>
+										<th>Mennyiség</th>
+										<th>Nyitó ár</th>
+										<th>Nyitás ideje</th>
+										<th th:text="'Nem realizált P/L (' + ${cur} + ')'">Nem realizált P/L</th>
+										<th th:text="'Fedezet (' + ${cur} + ')'">Fedezet</th>
+										<th></th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="t : ${trades}">
+										<td><strong th:text="${t.id}">12</strong></td>
+										<td th:text="${t.instrument}">EUR_USD</td>
+										<td>
+											<span class="price-close" th:classappend="${t.isLong()} ? 'up' : 'down'"
+												  th:text="${t.isLong()} ? 'Long' : 'Short'">Long</span>
+										</td>
+										<td th:text="${#numbers.formatInteger(t.units.abs(), 1, 'WHITESPACE')}">1000</td>
+										<td th:text="${#strings.replace(t.price.toPlainString(), '.', ',')}">1,16000</td>
+										<td th:text="${#temporals.format(t.openTime, 'yyyy.MM.dd. HH:mm:ss', 'Europe/Budapest')}">2026.01.01. 12:00:00</td>
+										<td class="price-close"
+											th:classappend="${t.unrealizedPL.signum() > 0} ? 'up' : (${t.unrealizedPL.signum() < 0} ? 'down' : '')"
+											th:text="${#numbers.formatDecimal(t.unrealizedPL, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+										<td th:text="${#numbers.formatDecimal(t.marginUsed, 1, 'WHITESPACE', 2, 'COMMA')}">0</td>
+										<td><a th:href="@{/forex/zar(tradeId=${t.id})}" class="button small">Zárás</a></td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+
+						<ul class="actions">
+							<li><a th:href="@{/forex/poz}" class="button">Frissítés</a></li>
+							<li><a th:href="@{/forex/nyit}" class="button primary">Új pozíció nyitása</a></li>
+						</ul>
+					</section>
+
+				</th:block>
+
+				<footer th:replace="~{fragments/layout :: pageFooter}"></footer>
+
+			</div>
+		</div>
+
+		<div th:replace="~{fragments/layout :: sidebar}"></div>
+
+	</div>
+
+	<th:block th:replace="~{fragments/layout :: scripts}"></th:block>
+
+</body>
+</html>

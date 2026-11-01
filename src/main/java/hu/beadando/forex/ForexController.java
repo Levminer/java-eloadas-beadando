@@ -121,4 +121,16 @@ public class ForexController {
 		return "redirect:/forex/nyit";
 	}
 
+	/** Forex-Poz: a nyitott pozíciók táblázatban, a számla összesítő adataival. */
+	@GetMapping("/poz")
+	public String poz(Model model) {
+		try {
+			model.addAttribute("account", oanda.getAccount());
+			model.addAttribute("trades", oanda.getOpenTrades());
+		} catch (OandaClient.OandaException e) {
+			model.addAttribute("error", e.getMessage());
+		}
+		return "forex/poz";
+	}
+
 }

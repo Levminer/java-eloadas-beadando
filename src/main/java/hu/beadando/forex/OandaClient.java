@@ -154,6 +154,14 @@ public class OandaClient {
 		});
 	}
 
+	/** A számlán nyitott pozíciók (tradek), a legutóbb nyitott elöl (Forex-Poz menü). */
+	public List<OpenTrade> getOpenTrades() {
+		return call(() -> ctx.trade.listOpen(accountId).getTrades().stream()
+				.map(OpenTrade::from)
+				.sorted(Comparator.comparing(OpenTrade::openTime).reversed())
+				.toList());
+	}
+
 	public Instrument findInstrument(String name) {
 		return getInstruments().stream()
 				.filter(i -> i.name().equals(name))
